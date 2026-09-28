@@ -10,8 +10,8 @@ HDR_LEN = 11
 TABLE = {
     "host": 0x01, "path": 0x02, "content-type": 0x03,
     "content-length": 0x04, "connection": 0x05, "accept": 0x06,
-    "user-agent": 0x07, "operation": 0x08, "operand-a": 0x09,
-    "operand-b": 0x0A,
+    "user-agent": 0x07, "server": 0x08, "cache-control": 0x09,
+    "content-encoding": 0x0A,
 }
 RTABLE = {v: k for k, v in TABLE.items()}
 

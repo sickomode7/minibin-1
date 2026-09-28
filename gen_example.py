@@ -1,10 +1,11 @@
+"""Demo/skip-rule check for MiniBin/1 file serving. See PROTOCOL.md."""
 import struct
 
 TABLE = {
     "host": 0x01, "path": 0x02, "content-type": 0x03,
     "content-length": 0x04, "connection": 0x05, "accept": 0x06,
-    "user-agent": 0x07, "operation": 0x08, "operand-a": 0x09,
-    "operand-b": 0x0A,
+    "user-agent": 0x07, "server": 0x08, "cache-control": 0x09,
+    "content-encoding": 0x0A,
 }
 
 def enc_header(name, value):
@@ -45,19 +46,21 @@ def dec_frames(buf):
         i += 11 + ln
     return out, skipped
 
-# --- Example from spec ---
-req_block = enc_block([("host", "calc.local"), ("path", "/add?a=2&b=3"),
-                       ("operation", "add"), ("X-Trace-ID", "abc-123")])
+# --- Canonical file-server example (matches ANNOTATION.md) ---
+BODY = b"hello minibin\n"  # 14 bytes, contents of /hello.txt
+req_block = enc_block([("host", "127.0.0.1:18081"), ("path", "/hello.txt"),
+                       ("user-agent", "miniburl/1"), ("connection", "keep-alive")])
 req = enc_frame(0x01, 0x01, 1, 1, req_block)
 
-resp_block = enc_block([("content-type", "text/plain"), ("content-length", "1")])
-resp = enc_frame(0x02, 0x01, 200, 1, resp_block + b"5")
+resp_block = enc_block([("content-type", "text/plain"),
+                        ("content-length", str(len(BODY)))])
+resp = enc_frame(0x02, 0x01, 200, 1, resp_block + BODY)
 
 print("REQ_BLOCK", req_block.hex(" "))
 print("REQ_FRAME", req.hex(" "))
 print("RESP_FRAME", resp.hex(" "))
 
-# skip-rule demo: REQ + unknown(0x9F,len=4) + RESP
+# skip-rule demo: REQ + unknown(0x9F,len=4) + RESP (mirrors test_skip.py)
 unknown = enc_frame(0x9F, 0x00, 0, 1, b"\xde\xad\xbe\xef")
 stream = req + unknown + resp
 frames, skipped = dec_frames(stream)
