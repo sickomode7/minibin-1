@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+www_test/
+body.txt
+body2.txt
+dump.txt
